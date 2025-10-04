@@ -22,7 +22,13 @@ class using factory
 ```java
 public class GeoShapeFactory {
   public GeoShape createShape(String shapeType) {
-    
+    if (shapeType.equalsIgnoreCase("CIRCLE")) {
+      return new Circle(0,0,10);
+    }
+    .
+    .
+    .
+    return null;
   }
 }
 ```
