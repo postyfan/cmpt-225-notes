@@ -1,7 +1,7 @@
 ## Design Patterns
 ---
  ### Singleton
- > only allows **one** object from class
+ > - only allows **one** object from class
 
 ```java
 public class Singleton {
@@ -16,8 +16,8 @@ public class Singleton {
 ```
 
 ### Factory
-> a collection of classes that implements an **interface** or extends and **Abstract** class
-> centralizes object creation that share a common type of
+>- a collection of classes that implements an **interface** or extends and **Abstract** class
+>- centralizes object creation that share a common type of
 
 this class implements a **Factory** Design Pattern called **GeoShapeFactory**
 ```java
@@ -33,7 +33,7 @@ public class GeoShapeFactory {
   }
 }
 ```
-> this class uses the **Factory** Design Class from above ^^^
+this class uses the **Factory** Design Class from above ^^^
 
 ``` java
 public class FactoryDemo {
