@@ -14,27 +14,34 @@ import java.util.*;
  */
 public class MyLinkedList<T> {
 
-	public class MyLinkedListNode<T> {
+	public class MyLinkedListNode {
 		T data;
-		MyLinkedListNode<T> next;
+		MyLinkedListNode next;
+		MyLinkedListNode prev;
 		// one param
 		MyLinkedListNode(T data) {
 			this.data = data;
 			this.next = null;
+			this.prev = null;
 		}
 		// two param
 		MyLinkedListNode(T data, MyLinkedListNode next) {
 			this.data = data;
 			this.next = next;
+			this.prev = null;
 		}
 		// getter
-		MyLinkedListNode<T> getNext() {
+		public MyLinkedListNode getNext() {
 			return this.next;
+		}
+		
+		public MyLinkedListNode getPrev() {
+			return this.prev;
 		}
 	}
 
-	private MyLinkedListNode<T> head;
-	private MyLinkedListNode<T> tail;
+	private MyLinkedListNode head;
+	private MyLinkedListNode tail;
 	private int length;
 
 	/**
@@ -51,11 +58,16 @@ public class MyLinkedList<T> {
 	 */
 	public void addLeft(T item) {
 		// newNode points to head
-		MyLinkedListNode<T> newNode = new MyLinkedListNode<T>(item, this.head);
-		// point head to newNode
-		this.head = newNode;
-		if (length==0)
+		MyLinkedListNode newNode = new MyLinkedListNode(item, this.head);
+		if (length == 0) {
+			this.head = newNode;
 			this.tail = newNode;
+			this.head.next = null;
+		}
+		else {
+			this.head.prev = newNode;
+			this.head = newNode;
+		}
 		length++;
 	}
 
@@ -63,14 +75,17 @@ public class MyLinkedList<T> {
 	 * Adds the new item to the right of the list. 
 	 */
 	public void addRight(T item) {
-		MyLinkedListNode<T> newNode = new MyLinkedListNode<T>(item, null);
+		MyLinkedListNode newNode = new MyLinkedListNode(item, null);
 		// if length == 0
 		if (length == 0) {
 			this.head = newNode;
 			this.tail = newNode;
 		}
-		this.tail.next = newNode;
-		this.tail = newNode;
+		else {
+			this.tail.next = newNode;
+			this.tail.next.prev = this.tail;
+			this.tail = newNode;
+		}
 		length++;
 	}
 
@@ -79,19 +94,19 @@ public class MyLinkedList<T> {
 	 * If the list is empty, throws NoSuchElementException.
 	 */
 	public T removeLeft() {
-		T temp;
+		// when nothing to remove -> length == 0
 		if (this.length == 0) {
 			throw new NoSuchElementException("List is empty");
 		}
-
-		if (this.head == this.tail) {
-			temp = this.head.data;
-			this.head.data = null;
-			return temp;
+		T temp = this.head.data;
+		if (this.length == 1) {
+			this.head = null;
+			this.tail = null;
 		}
-
-		temp = this.head.data;
-		this.head = this.head.next;
+		else {
+			this.head = this.head.next;
+			this.head.prev = null;
+		}
 		length--;
 		return temp;
 	}
@@ -105,40 +120,38 @@ public class MyLinkedList<T> {
 			throw new NoSuchElementException("List is empty");
 
 		T temp = this.tail.data;
-
-		if (this.head == this.tail) {
-			this.head.data = null;
-			return temp;
+		if (this.length == 1) {
+			this.head = null;
+			this.tail = null;
 		}
-
-		this.tail = this.head;
-		for (int i = 0; i < this.length-1; i++) {
-			this.tail = this.tail.next;
+		else {
+			this.tail = this.tail.prev;
+			this.tail.next = null;
 		}
-
-		length --;
-
-		return null;
+		length--;
+		return temp;
 	}
 
 
 	/**
 	 * Reverses the list
 	 */
-	public void reverse() {}
+	public void reverse() {
+		
+	}
 
 	/**
 	 * Returns the size of the list.
 	 */
 	public int size() {
-		return -1;
+		return length;
 	}
 
 	/**
 	 * Returns true if list is empty, and returns false otherwise.
 	 */
 	public boolean isEmpty() {
-		return false;
+		return length==0;
 	}
 
 }
