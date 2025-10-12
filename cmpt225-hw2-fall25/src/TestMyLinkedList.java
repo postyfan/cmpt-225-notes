@@ -105,11 +105,39 @@ public class TestMyLinkedList {
 			System.out.println("test5 ERROR");
 	}
 
+	public static void test6() {
+		MyLinkedList<String> l = new MyLinkedList<String>();
+		l.addLeft("C");
+		l.addLeft("B");
+		l.addLeft("A");
+		l.addRight("X");
+		l.addRight("Y");
+		l.addRight("Z");
+
+		// A-B-C-X-Y-Z
+		l.reverse();
+		// Z-Y-X-C-B-A
+		l.addRight("S");
+		l.addLeft("F");
+		// F Z Y X C B A S 
+		int count = 0;
+		while(count !=4) {
+			System.out.print(l.removeLeft() + " ");
+			count++;
+		}
+		// F Z Y X
+		l.reverse();
+		while (!l.isEmpty())
+			System.out.print(l.removeLeft() + " ");
+		// S A B C
+		System.out.println();
+	}
 	public static void main(String[] args) {
 		test1();
 		test2();
 		test3();
 		test4();
 		test5();
+		test6();
 	}
 }

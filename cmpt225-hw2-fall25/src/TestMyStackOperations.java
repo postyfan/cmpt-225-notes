@@ -153,6 +153,14 @@ public class TestMyStackOperations {
         testRemoveBottom();
         testReverse();
         testAreEqual();
+
+        // Stack<Integer> s = new StackLinkedListBased<>();
+        // s.push(1);
+        // s.push(2);
+        // s.push(3);
+        // s.push(4);
+
+        // System.out.println(MyStackOperations.removeBottom(s));
     }
 
 }
