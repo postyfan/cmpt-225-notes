@@ -18,7 +18,7 @@ This repository contains my notes and materials for CMPT 225. Click on the links
 | Week 3 | Design Patterns (Singleton, Factory) | [Week 3 Notes](week3-notes.md) |
 | Week 4 | [Topics covered in week 4] | [Link to notes when created] |
 | Week 5 | [Topics covered in week 5] | [Link to notes when created] |
-| Week 6 | [Topics covered in week 6] | [Week 6 Notes](week6-notes.md) |
+| Week 6 | Trees | [Week 6 Notes](week6-notes.md) |
 | Week 7 | [Topics covered in week 7] | [Link to notes when created] |
 | Week 8 | [Topics covered in week 8] | [Link to notes when created] |
 | Week 9 | [Topics covered in week 9] | [Link to notes when created] |

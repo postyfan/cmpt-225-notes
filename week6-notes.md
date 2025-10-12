@@ -1,311 +1,447 @@
-# Week 6
-## Binary Trees • Traversals (DFS/BFS) • BST (find/insert/remove) • Balancing • AVL (height bounds & rotations)
+# CMPT 225 — Week 06 Trees & BSTs (Cheat Sheet with Extra Diagrams + Time/Space)
 
 ---
 
-## Minimal Node Used in Examples
-```java
-// No external libraries
-class BTNode<T> {
-    T data;
-    BTNode<T> left, right, parent;
-    BTNode(T d){ data = d; }
-}
+## Binary Trees — core facts
+- **Binary tree**: each node has ≤ 2 children (left/right).  
+- **Level bound**: level `k` has ≤ `2^k` nodes ⇒ depth `d` has ≤ `2^(d+1) − 1` total nodes.  
+- **Typical node type (minimal)**
+  ```java
+  class BTNode<T> {
+    T data; BTNode<T> left, right, parent;
+    BTNode(T d){ data=d; }
+    void setLeft(BTNode<T> c){ left=c; if(c!=null) c.parent=this; }
+    void setRight(BTNode<T> c){ right=c; if(c!=null) c.parent=this; }
+  }
+  ```
+
+### Shape intuition
 ```
-
----
-
-## Binary Trees — Essentials (Theory + Intuition)
-- **Binary tree**: each node has ≤ 2 children (**left**, **right**).
-- **Max nodes at level k**: `2^k`. Depth **d** ⇒ total ≤ `2^(d+1) − 1`.
-- **Depth with N nodes**: best ≈ **log₂N** (balanced), worst ≈ **N−1** (path-like).
-
-**Visuals**
-```
-Balanced (depth ~ log N)         Path-like (depth ~ N-1)
+Balanced (height ~ log N)          Path-like (height ~ N-1)
         o                                   o
       /   \                                   \
      o     o                                   o
     / \   / \                                   \
-   o  o  o  o                                   o
+   o  o  o  o                                   o  ...
 ```
 
 ---
 
-## Traversals — Big Picture
-| Traversal | Type | Visit Order | Typical Use |
-|---|---|---|---|
-| **Pre-order** | DFS | Root → Left → Right | Serialize/clone; prefix expressions |
-| **In-order** | DFS | Left → Root → Right | Sorted output for **BST** |
-| **Post-order** | DFS | Left → Right → Root | Delete/free; evaluate expression trees |
-| **Level-order** | BFS | By levels (top→down, left→right) | Layered views; shortest paths in trees |
+## Traversals (definitions, examples, code patterns)
 
-**Reference Tree Used Below**
+### What each traversal does
+| Traversal | Visit order | Output on BST `(10,(5,(1,7)),(21,(16,25)))` |
+|---|---|---|
+| **Pre-order** | Root → Left → Right | `10, 5, 1, 7, 21, 16, 25` |
+| **In-order** | Left → Root → Right | `1, 5, 7, 10, 16, 21, 25` |
+| **Post-order** | Left → Right → Root | `1, 7, 5, 16, 25, 21, 10` |
+| **BFS (Level-order)** | Level by level | `10, 5, 21, 1, 7, 16, 25` |
+
+**Reference BST**
 ```
-            (10)
-           /    \
-         (5)    (21)
-        /  \    /  \
-      (1)  (7) (16) (25)
+        10
+       /  \
+      5    21
+     / \   / \
+    1   7 16 25
 ```
-- **Pre**: 10, 5, 1, 7, 21, 16, 25  
-- **In**:  1, 5, 7, 10, 16, 21, 25  
-- **Post**:1, 7, 5, 16, 25, 21, 10  
-- **Level**:10, 5, 21, 1, 7, 16, 25
 
----
+#### Visual walk-throughs
+_Pre-order (Root → L → R)_
+```
+Visit: 10 → 5 → 1 → 7 → 21 → 16 → 25
+```
+_In-order (L → Root → R)_
+```
+Left(10)=[1,5,7]  Root=10  Right(10)=[16,21,25] → sorted
+```
+_Post-order (L → R → Root)_
+```
+Children first, then node → 1,7,5,16,25,21,10
+```
+_BFS / Level-order_
+```
+L0: [10]
+L1: [5, 21]
+L2: [1, 7, 16, 25]
+```
 
-## DFS Traversals — Templates + Visual Walkthroughs (O(size))
-
-> Same template—just move the “visit/print” line.
-
+### Minimal recursive pattern (move one line)
 ```java
-// No external libs needed
-void pre(BTNode<Integer> r){
-    if(r==null) return;
-    System.out.println(r.data);   // Root
-    pre(r.left);                  // Left
-    pre(r.right);                 // Right
+void pre(BTNode<Integer> r){ if(r==null) return;
+  System.out.println(r.data); pre(r.left); pre(r.right);
 }
-void in(BTNode<Integer> r){
-    if(r==null) return;
-    in(r.left);                   // Left
-    System.out.println(r.data);   // Root
-    in(r.right);                  // Right
+void in(BTNode<Integer> r){ if(r==null) return;
+  in(r.left); System.out.println(r.data); in(r.right);
 }
-void post(BTNode<Integer> r){
-    if(r==null) return;
-    post(r.left);                 // Left
-    post(r.right);                // Right
-    System.out.println(r.data);   // Root
+void post(BTNode<Integer> r){ if(r==null) return;
+  post(r.left); post(r.right); System.out.println(r.data);
 }
 ```
 
-**Pre-order Visual (Root first)**
-```
-10
-├─ 5
-│  ├─ 1
-│  └─ 7
-└─ 21
-   ├─ 16
-   └─ 25
-Output: 10, 5, 1, 7, 21, 16, 25
-```
-
-**In-order Visual (In between children)**
-```
-Left(10) → 10 → Right(10)
-Left(10) = [1,5,7]    Right(10) = [16,21,25]
-Output: 1, 5, 7, 10, 16, 21, 25  (BST ⇒ sorted)
-```
-
-**Post-order Visual (Root last)**
-```
-Process subtrees fully, then the node
-Output: 1, 7, 5, 16, 25, 21, 10
-```
-
-**Iterative Patterns (when avoiding recursion)**
-
-_Pre-order (stack): push right then left_
+### Iterative Pre-order (stack)
 ```java
-import java.util.ArrayDeque;
-import java.util.Deque;
-
 void preIter(BTNode<Integer> root){
-    if(root==null) return;
-    Deque<BTNode<Integer>> st = new ArrayDeque<>();
-    st.push(root);
-    while(!st.isEmpty()){
-        BTNode<Integer> n = st.pop();
-        System.out.println(n.data);
-        if(n.right!=null) st.push(n.right);
-        if(n.left!=null)  st.push(n.left);
-    }
+  if(root==null) return;
+  java.util.Deque<BTNode<Integer>> s=new java.util.ArrayDeque<>();
+  s.push(root);
+  while(!s.isEmpty()){
+    BTNode<Integer> n=s.pop();
+    System.out.println(n.data);
+    if(n.right!=null) s.push(n.right);   // push right first
+    if(n.left!=null)  s.push(n.left);    // so left is processed next
+  }
 }
 ```
 
-_In-order (stack + runner to the left spine)_
+### BFS / Level-order (queue)
 ```java
-import java.util.ArrayDeque;
-import java.util.Deque;
-
-void inIter(BTNode<Integer> root){
-    Deque<BTNode<Integer>> st = new ArrayDeque<>();
-    BTNode<Integer> cur = root;
-    while(cur!=null || !st.isEmpty()){
-        while(cur!=null){ st.push(cur); cur = cur.left; }
-        cur = st.pop();
-        System.out.println(cur.data);
-        cur = cur.right;
-    }
+void bfs(BTNode<Integer> root){
+  if(root==null) return;
+  java.util.Queue<BTNode<Integer>> q=new java.util.ArrayDeque<>();
+  q.add(root);
+  while(!q.isEmpty()){
+    BTNode<Integer> n=q.remove();
+    System.out.println(n.data);
+    if(n.left!=null)  q.add(n.left);
+    if(n.right!=null) q.add(n.right);
+  }
 }
 ```
 
-_Post-order (two stacks trick)_
-```java
-import java.util.ArrayDeque;
-import java.util.Deque;
+**Iterative mental models**
+```
+Pre stack (push R then L):      In stack (left spine):        BFS queue:
+Top → [R,L,...]                  push lefts to null            pop ← [ .. root .. ] ← push children
+```
 
-void postIter(BTNode<Integer> root){
-    if(root==null) return;
-    Deque<BTNode<Integer>> s1 = new ArrayDeque<>();
-    Deque<BTNode<Integer>> s2 = new ArrayDeque<>();
-    s1.push(root);
-    while(!s1.isEmpty()){
-        BTNode<Integer> n = s1.pop();
-        s2.push(n);
-        if(n.left!=null)  s1.push(n.left);
-        if(n.right!=null) s1.push(n.right);
+---
+
+## Size & Height (rec/iter)
+```java
+int size(BTNode<?> r){
+  return (r==null)?0:1+size(r.left)+size(r.right);
+}
+int height(BTNode<?> r){       // edges on longest path
+  return (r==null)?-1:1+Math.max(height(r.left),height(r.right));
+}
+```
+```java
+int sizeIter(BTNode<?> root){
+  if(root==null) return 0;
+  java.util.Queue<BTNode<?>> q=new java.util.ArrayDeque<>();
+  q.add(root); int cnt=0;
+  while(!q.isEmpty()){
+    BTNode<?> n=q.remove(); cnt++;
+    if(n.left!=null)  q.add(n.left);
+    if(n.right!=null) q.add(n.right);
+  }
+  return cnt;
+}
+int heightIter(BTNode<?> root){
+  if(root==null) return -1;
+  java.util.Queue<BTNode<?>> q=new java.util.ArrayDeque<>();
+  q.add(root); int h=-1;
+  while(!q.isEmpty()){
+    for(int i=q.size(); i>0; --i){
+      BTNode<?> n=q.remove();
+      if(n.left!=null)  q.add(n.left);
+      if(n.right!=null) q.add(n.right);
     }
-    while(!s2.isEmpty()) System.out.println(s2.pop().data); // L R Root
+    h++;
+  }
+  return h;
 }
 ```
 
 ---
 
-## Level-order / BFS (O(size))
+## Binary Search Trees (BST)
 
+### Definition & invariant
+```
+For every node x:
+   keys(left(x)) ≤ x.key ≤ keys(right(x))   (for all descendants)
+```
+_In-order_ yields sorted keys.  
+**Duplicates policy used:** equal keys go **to the right**.
+
+### Find / Insert / Remove (generic shapes)
 ```java
-import java.util.ArrayDeque;
-import java.util.Queue;
-
-void levelOrder(BTNode<Integer> root){
-    if(root==null) return;
-    Queue<BTNode<Integer>> q = new ArrayDeque<>();
-    q.add(root);
-    while(!q.isEmpty()){
-        BTNode<Integer> n = q.remove();
-        System.out.println(n.data);
-        if(n.left!=null)  q.add(n.left);
-        if(n.right!=null) q.add(n.right);
-    }
-}
-```
-
-**Layered Visual**
-```
-Level 0: 10
-Level 1: 5, 21
-Level 2: 1, 7, 16, 25
-```
-
----
-
-## Binary Search Trees (BST) — Property & Core Ops
-- **BST property**: Left subtree ≤ node ≤ Right subtree (by key).
-- **In-order** on a BST prints keys in **sorted order**.
-- **Cost**: find/insert/remove = **O(depth)**.
-
-**Find / Insert / Remove (3 cases)**
-
-```java
-// T extends Comparable<T>
-BTNode<T> find(BTNode<T> r, T x){
-    if(r==null) return null;
+// FIND (iterative)
+<T extends Comparable<T>> BTNode<T> find(BTNode<T> r, T x){
+  while(r!=null){
     int c = x.compareTo(r.data);
     if(c==0) return r;
-    return (c<0) ? find(r.left, x) : find(r.right, x);
+    r = (c<0) ? r.left : r.right;
+  }
+  return null;
 }
 
-BTNode<T> insert(BTNode<T> r, T x){
-    if(r==null) return new BTNode<>(x);
-    int c = x.compareTo(r.data);
-    if(c<0) r.left = insert(r.left, x);
-    else    r.right= insert(r.right, x); // convention: dups to right
-    return r;
+// INSERT (duplicates → right)
+<T extends Comparable<T>> BTNode<T> insert(BTNode<T> r, T x){
+  if(r==null) return new BTNode<>(x);
+  if(x.compareTo(r.data)<0) r.setLeft(insert(r.left,x));
+  else                      r.setRight(insert(r.right,x));
+  return r;
 }
 
-BTNode<T> min(BTNode<T> n){ while(n.left!=null) n=n.left; return n; }
-
-BTNode<T> remove(BTNode<T> r, T x){
-    if(r==null) return null;
-    int c = x.compareTo(r.data);
-    if(c<0) r.left  = remove(r.left, x);
-    else if(c>0) r.right = remove(r.right, x);
-    else{
-        if(r.left==null)  return r.right;    // 0 or 1 child
-        if(r.right==null) return r.left;
-        BTNode<T> s = min(r.right);          // successor
-        r.data = s.data;
-        r.right = remove(r.right, s.data);   // delete successor
-    }
-    return r;
+// REMOVE (3 cases)
+<T extends Comparable<T>> BTNode<T> min(BTNode<T> n){
+  while(n.left!=null) n=n.left; return n;
+}
+<T extends Comparable<T>> BTNode<T> remove(BTNode<T> r, T x){
+  if(r==null) return null;
+  int c = x.compareTo(r.data);
+  if(c<0) r.setLeft(remove(r.left,x));
+  else if(c>0) r.setRight(remove(r.right,x));
+  else{
+    if(r.left==null)  return r.right;
+    if(r.right==null) return r.left;
+    BTNode<T> s=min(r.right);   // successor
+    r.data = s.data;
+    r.setRight(remove(r.right, s.data));
+  }
+  return r;
 }
 ```
 
-**Remove (two-children) Visual**
+#### Remove cases — diagrams
+_Leaf (0 children)_
 ```
-Before:                After copying successor:
-      (X)                         (S)
-     /   \                       /   \
-    …   (Right)      =>         …   (Right with S removed)
-        /
-      (S=min in Right)
+Parent ──> [X]        ⇒  Parent ──> null
+```
+_One child_
+```
+Parent ──> [X]
+           /
+         [C]        ⇒  Parent ──> [C]
+```
+_Two children (copy successor, then delete it)_
+```
+     [X]                       [S]
+    /   \         copy S       /  \
+  ...   [R]      ─────────>   ...  [R*] (S removed from R)
+       /
+     [S=min(R)]
+```
+
+#### Successor / Predecessor — diagrams
+```
+Successor(x): if right!=null → min(right)
+Else go up: first ancestor where x is in its LEFT subtree
+```
+```
+Predecessor(x): if left!=null → max(left)
+Else go up: first ancestor where x is in its RIGHT subtree
 ```
 
 ---
 
-## Balancing — One-shot vs Self-balancing
-- **Rebuild once** from sorted array (in-order → array → median-first build): balanced **now**, but **loses balance** with later updates.
-- **Self-balancing trees** (AVL, 2–3, B-Trees) fix height **after every** update.
-
-**Median-First Build (Visual)**
+## Build a balanced tree from a sorted array (median-first)
+```java
+<T extends Comparable<T>> BTNode<T> fromSorted(java.util.List<T> a,int lo,int hi){
+  if(lo>hi) return null;
+  int mid=(lo+hi)/2;
+  BTNode<T> r=new BTNode<>(a.get(mid));
+  r.setLeft (fromSorted(a,lo,mid-1));
+  r.setRight(fromSorted(a,mid+1,hi));
+  return r;
+}
 ```
-Array [1..8] → choose 4/5 as root
-Left = build [1..3]       Right = build [6..8]
-(recurse choosing middles)
+_Build shape_
+```
+Array: [1, 5, 7, 10, 16, 21, 25]
+             ^
+            (10)
+           /    \
+        (5)      (21)
+       /  \      /  \
+     (1)  (7) (16)  (25)
 ```
 
 ---
 
-## AVL Trees — Theory + Rotations
-- **Balance rule**: for every node `v`, `|h(v.left) − h(v.right)| ≤ 1`.
-- **Height bound**: `height = O(log N)` (via size lower bounds like Fibonacci).
-- **Update path** after insert/remove: recompute heights; if a node is ±2, **rotate**.
+## AVL Trees (self-balancing BST)
 
-**Node with height**
+### Balance rule & height
+```
+∀ node v: |height(v.left) − height(v.right)| ≤ 1
+Height = O(log N)  (via Fibonacci lower bound on size)
+```
+
+### Detect & fix (rebalance up the path)
+```
+Let z be first unbalanced node on the path up (±2)
+Pick the child y = taller child of z
+Pick the grandchild x = taller child of y (tie → same-side)
+Case by pattern of (z,y,x): LL, RR, LR, RL → apply rotations
+```
+
+### Rotation diagrams
+_LL (Right rotate)_
+```
+      z                 y
+     /                 / \
+    y       ---->     x   z
+   /
+  x
+```
+
+_RR (Left rotate)_
+```
+  z                     y
+   \                   / \
+    y      ---->      z   x
+     \
+      x
+```
+
+_LR (Left on child, Right on z)_
+```
+    z                  z                  x
+   /                  /                  / \
+  y       ---->     (x)     ---->       y   z
+   \                /                  (subtrees reattached)
+    x              y
+```
+
+_RL (Right on child, Left on z)_
+```
+  z                    z                   x
+   \                  /                   / \
+    y     ---->     (x)       ---->      z   y
+   /                                       
+  x
+```
+
+**Minimal AVL insert (shape)**
 ```java
-class AVLNode<T extends Comparable<T>> {
-    T data; AVLNode<T> left, right, parent; int height; // empty child = -1
-}
+// Insert like BST, then rebalance up:
+AVLNode insert(AVLNode n, K k):
+  if n==null: return new AVLNode(k)
+  if k < n.key:  n.left  = insert(n.left, k)
+  else:          n.right = insert(n.right,k)
+  updateHeight(n)
+  return rebalance(n)   // apply LL/RR/LR/RL as needed
 ```
 
-**Single Rotations (sketch)**
-```java
-AVLNode<T> rotateRight(AVLNode<T> y){
-    AVLNode<T> x = y.left,  T2 = x.right;
-    x.right = y; y.left = T2;
-    // update heights (y then x)
-    return x;
-}
-AVLNode<T> rotateLeft(AVLNode<T> x){
-    AVLNode<T> y = x.right, T2 = y.left;
-    y.left = x; x.right = T2;
-    // update heights (x then y)
-    return y;
-}
+---
+
+## 2–3 Trees (perfectly balanced)
+**Properties**
+- Internal nodes: **2 or 3** children; **1 or 2** keys.  
+- **All leaves at same depth** ⇒ strictly balanced ⇒ `Θ(log N)` height.
+
+_Split on insert_
+```
+Leaf [A,B,C]  → promote B
+        B
+      /   \
+    [A]   [C]
 ```
 
-**Rotation Cases (Insert) & Visual Mnemonics**
+_Borrow / Merge on delete_
 ```
-LL case (heavy Left-Left):        RR case (heavy Right-Right):
-        z                                  z
-       /                                  / \
-      y             rotateRight(z)       a   y
-     /      =>                         /     \
-    x                                  z      x
-                                      /        \
-                                     b          c
-
-LR case: rotateLeft(y) then rotateRight(z)
-RL case: rotateRight(y) then rotateLeft(z)
+Borrow:          Merge:
+ [K|   ] ←→ [L|M]        [K]  [L]   →   [K|L]
+   ↑ take L or M         (pull key down from parent if needed)
 ```
-**Quick rule:** “Follow the heavy side twice”  
-- LL → Right rotate  
-- RR → Left rotate  
-- LR → Left then Right  
-- RL → Right then Left
 
+---
 
+## B-Trees (order m)
+**Node capacity**
+```
+Root: 2..m children
+Internal (non-root): ceil(m/2)..m children
+Leaves: same depth
+```
+_Why_: external-memory friendly (one node ≈ one disk block).
+
+_Insert split (node with too many keys)_
+```
+[ a | b | c | d ]  (too many)
+          ↓ promote median (b or c)
+     parent gets key; children split around it
+```
+
+_Delete underflow_
+```
+Borrow from rich sibling if possible; else merge with sibling and pull parent key down
+(recursive up as needed)
+```
+
+---
+
+## **Time & Space Complexity (Cheat Table)**
+
+### Traversals & Basic Utilities
+| Operation | Time | Extra Space |
+|---|---|---|
+| **Pre/In/Post (recursive)** | `Θ(N)` | recursion stack `O(H)` |
+| **Pre (iterative, stack)** | `Θ(N)` | `O(H)` stack (worst `O(N)`) |
+| **In (iterative, stack)** | `Θ(N)` | `O(H)` stack |
+| **Post (two stacks)** | `Θ(N)` | `O(N)` in worst-case (2 stacks total `O(N)`) |
+| **BFS / Level-order** | `Θ(N)` | queue up to width `O(W)` (worst `O(N)`) |
+| **Size/Height (rec)** | `Θ(N)` | recursion `O(H)` |
+| **Size/Height (iter BFS)** | `Θ(N)` | queue `O(W)` |
+
+`N` = nodes, `H` = height, `W` = max width.
+
+### BST (unbalanced)
+| Operation | Best | Average (random) | Worst | Extra Space |
+|---|---|---|---|---|
+| **find / insert / remove** | `Ω(log N)` | `Θ(log N)` | `Θ(N)` | recursive: `O(H)`; iterative: `O(1)` |
+
+> Height `H` can degrade to `N−1` if keys arrive sorted.
+
+### Build / Conversions
+| Task | Time | Extra Space |
+|---|---|---|
+| **Build from Pre+In (distinct keys)** | `Θ(N)` (with hashmap of inorder indices) | recursion `O(H)` + hashmap `O(N)` |
+| **Build balanced from sorted array** | `Θ(N)` | recursion `O(H)` |
+| **Copy / Serialize tree (pre-order)** | `Θ(N)` | `O(H)` |
+
+### AVL (balanced BST)
+| Operation | Time | Extra Space | Notes |
+|---|---|---|---|
+| **find** | `Θ(log N)` | `O(1)` iterative or `O(log N)` recursion | height bounded |
+| **insert** | `Θ(log N)` | `O(1)` extra (rotations constant) | ≤ 2 rotations |
+| **remove** | `Θ(log N)` | `O(1)` extra | ≤ 2 rotations per unbalance on path |
+| **height bound** | `≤ c·log N` | — | from Fibonacci lower bound |
+
+### 2–3 Trees
+| Operation | Time | Space (extra) | Notes |
+|---|---|---|---|
+| **search / insert / delete** | `Θ(log N)` | `O(1)` amortized | perfect balance; split/merge may cascade |
+
+### B-Trees (order `m`)
+| Operation | Time | Node I/O | Notes |
+|---|---|---|---|
+| **search / insert / delete** | `Θ(logₘ N)` comparisons | `O(logₘ N)` blocks | split/borrow/merge amortized `O(1)` per update |
+
+### Representation Space
+| Structure | Space |
+|---|---|
+| **Pointer-based binary tree** | `Θ(N)` nodes; each node `O(1)` pointers & key |
+| **With parent pointers** | still `Θ(N)` (constant factor ↑) |
+| **Arrays for complete BT (heap)** | `O(N)` contiguous array; parent/child via indices |
+
+---
+
+## Practice cues
+- Build BSTs from insertion sequences; **draw shape** + **in-order** to verify.  
+- Reconstruct BST from **pre-order** (unique for BST).  
+- Track **duplicate policy** (here: equal → right).  
+- Augment nodes (e.g., `subtreeSize`) if you need `rank/select` in `Θ(log N)`.
+
+---
+
+## Complexity summary (at a glance)
+```
+Traversals: Θ(N) time, O(H) or O(W) space
+BST ops:   Θ(height) → Θ(log N) average, Θ(N) worst
+AVL ops:   Θ(log N) time, O(1) extra, rotations constant
+2–3/B-Tree: Θ(log N) (or logₘN) with strict balance / block I/O efficiency
+```
