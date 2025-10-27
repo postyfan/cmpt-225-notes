@@ -1,14 +1,16 @@
 package sorting;
-
 import java.util.Arrays;
-import java.util.Stack;
 
 public class MySortingAlgs {
 
     public static void sortStrings(String[] a) {
         // TODO implement me
+        Arrays.sort(a, (o1,o2) -> {
+            if (o1.length() != o2.length())
+                return o1.length() - o2.length();
+            return o1.compareTo(o2);
+        });
     }
-
 
 	/**
 	 * Assumption arr[start...mid-1] is sorted and arr[mid...end] is sorted.
@@ -17,6 +19,22 @@ public class MySortingAlgs {
 	 */
 	public static <T extends Comparable<T>> void merge(T[] arr, int start, int mid, int end) {
         // TODO implement me
+        T[] left = Arrays.copyOfRange(arr, start, mid);
+        T[] right = Arrays.copyOfRange(arr, mid, end+1);
+        int i = 0; // index for left
+        int j = 0; // index for right
+        int k = start; // index for arr
+        while (i < left.length && j < right.length) {
+            if (left[i].compareTo(right[j]) <= 0 )
+                arr[k++] = left[i++];
+            else
+                arr[k++] = right[j++];
+        }
+        // Add remaining elements to arr
+        while (i < left.length) 
+            arr[k++] = left[i++];
+        while (j < right.length)
+            arr[k++] = right[j++];
 	}
 
 
