@@ -41,21 +41,15 @@ public class BinaryTree<T> {
      * returns the number of leaves in the tree
      */
     public int numberOfLeaves() {
-        if (root == null) 
+        return countLeaves(root);
+    }
+
+    public int countLeaves(BTNode<T> root) {
+        if (root == null)
             return 0;
         if (root.isLeaf())
             return 1;
-        
-        int leftLeaves = 0, rightLeaves = 0;
-        if (root.getLeftChild() != null) {
-            BinaryTree<T> left = new BinaryTree<>(root.getLeftChild());
-            leftLeaves = left.numberOfLeaves();
-        }
-        if (root.getRightChild() != null) {
-            BinaryTree<T> right = new BinaryTree<>(root.getRightChild());
-            rightLeaves = right.numberOfLeaves();
-        }
-        return leftLeaves + rightLeaves;
+        return countLeaves(root.getLeftChild()) + countLeaves(root.getRightChild());
     }
 
 
@@ -81,7 +75,7 @@ public class BinaryTree<T> {
         boolean l = same(b1.getLeftChild(), b2.getLeftChild());
         boolean r = same(b1.getRightChild(), b2.getRightChild());
 
-        return l == true && r == true;
+        return l && r;
     }
 
     /**
@@ -91,17 +85,23 @@ public class BinaryTree<T> {
     public int countDepthK(int k) {
         // TODO implement me
         // Need to use BFS to go to level and count nodes in that level
+        if (k < 0)
+            throw new IllegalArgumentException("Input must be a positive number");
+        if (root == null || k > height())
+            return 0;
+        if (k == 0)
+            return 1;
         LinkedList<BTNode<T>> queue = new LinkedList<>();
-        int count = 0, level = 0;
+        int level = 0;
         queue.add(root);
 
-        while (!queue.isEmpty() && level != k+1) {
-            count = 0;
+        while (!queue.isEmpty()) {
             int size = queue.size();
+            // If we have reached level then return the size of queue
+            if (level == k)
+                return size;
             for (int i = 0; i < size; i++) {
                 BTNode<T> cur = queue.poll();
-                if (level == k)
-                    count++;
                 
                 if (cur.getLeftChild() != null)
                     queue.add(cur.getLeftChild());
@@ -110,7 +110,7 @@ public class BinaryTree<T> {
             }
             level++;
         }
-        return count;
+        return 0;
     }
 
 

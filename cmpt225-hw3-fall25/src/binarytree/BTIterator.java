@@ -3,12 +3,10 @@ package binarytree;
 import java.util.*;
 
 public class BTIterator<T> implements Iterator<T>{
-    private BTNode<T> root; // want this to point to the BTNode in BinaryTree instance
 
     private Stack<BTNode<T>> stack;
 
     public BTIterator(BTNode<T> root) {
-        this.root = root;
         stack = new Stack<>();
         if (root != null)
             stack.push(root);
@@ -25,6 +23,8 @@ public class BTIterator<T> implements Iterator<T>{
 
     @Override
     public T next() {
+        if (!this.hasNext())
+            throw new NoSuchElementException("There are no more elements in the Iterator");
         BTNode<T> cur = stack.pop();
         if (cur.getRightChild() != null)
             stack.push(cur.getRightChild());

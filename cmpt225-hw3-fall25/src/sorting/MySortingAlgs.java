@@ -5,6 +5,8 @@ public class MySortingAlgs {
 
     public static void sortStrings(String[] a) {
         // TODO implement me
+        if (a.length == 0 || a.length == 1)
+            return;
         Arrays.sort(a, (o1,o2) -> {
             if (o1.length() != o2.length())
                 return o1.length() - o2.length();
